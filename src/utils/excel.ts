@@ -1,0 +1,186 @@
+import { WorkBook, utils } from 'xlsx';
+import { HolidayType } from './request';
+
+export interface SheetDataType {
+  '序号': string | number;
+  '日期\r\n姓名': string;
+  [x: string]: string | number;
+}
+
+interface OriginSheetDataType {
+  [x: string]: string;
+}
+
+/**
+ * 读取excel数据
+ * @param workbook 
+ * @param dateList 
+ * @returns 
+ */
+export const readExcel = (workbook: WorkBook, dateList: HolidayType[] = []) => {
+  const dateMapList = dateList.map(item => {
+    let value = '√';
+    if (item.typeDes === '休息日') {
+      value = '休';
+    } else if (item.typeDes !== '工作日') {
+      value = item.typeDes.slice(0, 1);
+    }
+    return value;
+  });
+  const { SheetNames, Sheets } = workbook;
+  const originData: OriginSheetDataType[] = utils.sheet_to_json(Sheets[SheetNames[0]]);
+
+  const daysData = originData[2];
+  const daysKey: string[] = [];
+  const userData = originData.slice(3);
+  const daysReg = /^(\d{1,2})(\r\n)([一二三四五六日]{1})$/;
+  Object.keys(daysData).forEach(key => {
+    if (daysReg.test(daysData[key])) {
+      daysKey.push(key);
+    }
+  });
+
+  const sheetInfo: SheetDataType = {
+    '序号': '',
+    '日期\r\n姓名': '',
+  };
+  const sheetData = userData.map((item, index) => {
+    const userItem: SheetDataType = {
+      '序号': index + 1,
+      '日期\r\n姓名': item[SheetNames[0]],
+    };
+    daysKey.forEach(key => {
+      const len = daysData[key].length;
+      const ind = daysData[key].slice(-len, len - 1);
+      const weekDay = daysData[key].slice(-1);
+      userItem[ind] = workStatus(item[key], Number(ind), dateMapList);
+      sheetInfo[ind] = weekDay;
+    });
+    return userItem;
+  });
+  sheetData.unshift(sheetInfo);
+
+  return {
+    sheetData,
+    sheetName: SheetNames[0],
+  };
+}
+
+/**
+ * 判断工作状态
+ * @param value 
+ * @param ind 
+ * @param dateMapList 
+ */
+const workStatus = (value: string, ind: number, dateMapList: string[] = []) => {
+
+  if (!value.includes('补卡')) {
+    if (value.includes('缺卡(09:00)')) {
+      if (value.includes('早退')) {
+        return '上班未打卡；○';
+      }
+    }
+    if (value.includes('缺卡(17:20)')) {
+      if (value.includes('迟到')) {
+        return '▲；下班未打卡';
+      }
+    }
+    if (value.includes('迟到') && value.includes('早退')) {
+      return '▲；○';
+    }
+  }
+
+  const leaveList = [
+    {
+      type: value.includes('缺卡(09:00)'),
+      value: '上班未打卡'
+    },
+    {
+      type: value.includes('缺卡(17:20)'),
+      value: '下班未打卡'
+    },
+    {
+      type: value.includes('迟到'),
+      value: '▲'
+    },
+    {
+      type: value.includes('早退'),
+      value: '○'
+    },
+    {
+      type: value.includes('旷工'),
+      value: '☆'
+    },
+    {
+      type: value.includes('停电'),
+      value: '⊕'
+    },
+    {
+      type: value.includes('事假'),
+      value: '事'
+    },
+    {
+      type: value.includes('病假'),
+      value: '病'
+    },
+    {
+      type: value.includes('产假'),
+      value: '产'
+    },
+    {
+      type: value.includes('丧假'),
+      value: '丧'
+    },
+    {
+      type: value.includes('婚假'),
+      value: '婚'
+    },
+    {
+      type: value.includes('调休') || value.includes('请假'),
+      value: '休'
+    },
+  ];
+  const leaveRes = leaveList.find(h => h.type)?.value;
+  if (leaveRes) return leaveRes;
+
+  if (value.includes('休息')) {
+    return dateMapList[ind - 1];
+  }
+
+  if (value === '--') {
+    return '--';
+  }
+
+  return '√';
+}
+
+/* 
+  {
+    year: '',
+    month: '',
+    startTime: '',
+    endTime: '',
+    data: [
+      {
+        序号: '',
+        姓名/日期: '',
+        1: '日',
+        2: '一',
+        3: '二',
+        4: '三',
+        ...,
+        31: '二',
+      },
+      {
+        序号: '1',
+        姓名/日期: 'xxx',
+        1: '休',
+        2: '休',
+        3: '休',
+        4: '休',
+        ...,
+        31: '√',
+      },
+    ]
+  }
+*/
