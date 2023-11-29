@@ -17,8 +17,11 @@ export default defineConfig({
     default: 'zh-CN',
     antd: true,
   },
-  favicon: '/favicon.ico',
-  hash: true,
+  favicon: './favicon.ico',
   mfsu: {},
   fastRefresh: {},
+  publicPath: './',
+  history: {
+    type: 'hash'
+  },
 });
