@@ -40,7 +40,7 @@ export default function IndexPage() {
   }, [dateList]);
 
   useEffect(() => {
-    if (file) {
+    if (file && dateList.length) {
       message.info('正在处理数据，请稍候......');
       setTimeout(() => {
         excelReader.readAsBinaryString(file.originFileObj!);
@@ -60,10 +60,14 @@ export default function IndexPage() {
   }
 
   const handleDateChange = (value: moment.Moment | null, dateString: string) => {
-    setLoading(true);
-    getHoliday(dateString.replace('-', ''))
-      .then(res => setDateList(res.data))
-      .finally(() => setLoading(false))
+    if (dateString) {
+      setLoading(true);
+      getHoliday(dateString.replace('-', ''))
+        .then(res => setDateList(res.data))
+        .finally(() => setLoading(false))
+    } else {
+      setDateList([]);
+    }
   }
 
   const handleFinish = () => {
@@ -112,6 +116,7 @@ export default function IndexPage() {
               name='file'
               accept='.xls,.xlsx,.csv'
               maxCount={1}
+              beforeUpload={() => false}
               onChange={handleFileChange}
             >
               <p className={styles.icon}><InboxOutlined /></p>
