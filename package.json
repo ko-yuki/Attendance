@@ -6,9 +6,6 @@
     "type": "git",
     "url": ""
   },
-  "engines": {
-    "yarn": "^1.22.19"
-  },
   "scripts": {
     "start": "umi dev",
     "build": "umi build",
