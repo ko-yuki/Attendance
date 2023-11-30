@@ -33,6 +33,7 @@ export const readExcel = (workbook: WorkBook, dateList: HolidayType[] = []) => {
   const daysData = originData[2];
   const daysKey: string[] = [];
   const userData = originData.slice(3);
+  const userNameKey = Sheets[SheetNames[0]].A1.h;
   const daysReg = /^(\d{1,2})(\r\n)([一二三四五六日]{1})$/;
   Object.keys(daysData).forEach(key => {
     if (daysReg.test(daysData[key])) {
@@ -47,7 +48,7 @@ export const readExcel = (workbook: WorkBook, dateList: HolidayType[] = []) => {
   const sheetData = userData.map((item, index) => {
     const userItem: SheetDataType = {
       '序号': index + 1,
-      '日期\r\n姓名': item[SheetNames[0]],
+      '日期\r\n姓名': item[userNameKey],
     };
     daysKey.forEach(key => {
       const len = daysData[key].length;
