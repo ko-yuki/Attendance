@@ -1,10 +1,11 @@
 {
   "private": false,
   "description": "打卡自动统计系统",
+  "homepage": "https://attendance-65j.pages.dev",
   "keywords": ["react", "umi", "antd", "xlsx", "excel", "csv"],
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://github.com/ko-yuki/Attendance"
   },
   "scripts": {
     "start": "umi dev",
