@@ -26,4 +26,5 @@
 
 ### 访问地址
 
+https://bd203a5f.attendance-65j.pages.dev
 https://ko-yuki.github.io/Attendance/dist/index.html#/

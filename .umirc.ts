@@ -24,4 +24,5 @@ export default defineConfig({
   history: {
     type: 'hash'
   },
+  title: '自动考勤'
 });
