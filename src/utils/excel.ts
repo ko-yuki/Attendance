@@ -1,6 +1,11 @@
 import { WorkBook, utils } from 'xlsx';
 import { HolidayType } from './request';
 
+const CHECK_START_HOUR = 8;
+const CHECK_START_MIN = 30;
+const CHECK_END_HOUR = 17;
+const CHECK_END_MIN = 30;
+
 export interface SheetDataType {
   '序号': string | number;
   '日期\r\n姓名': string;
@@ -19,7 +24,7 @@ interface OriginSheetDataType {
  */
 export const readExcel = (workbook: WorkBook, dateList: HolidayType[] = []) => {
   const dateMapList = dateList.map(item => {
-    let value = '√';
+    let value = '';
     if (item.typeDes === '休息日') {
       value = '休';
     } else if (item.typeDes !== '工作日') {
@@ -34,13 +39,14 @@ export const readExcel = (workbook: WorkBook, dateList: HolidayType[] = []) => {
   const daysKey: string[] = [];
   const userData = originData.slice(3);
   const userNameKey = Sheets[SheetNames[0]].A1.h;
-  const daysReg = /^(\d{1,2})(\r\n)([一二三四五六日]{1})$/;
+  const daysReg = /^(\d{1,2})(\r?\n?)([一二三四五六日]{1})$/;
   Object.keys(daysData).forEach(key => {
     if (daysReg.test(daysData[key])) {
       daysKey.push(key);
     }
   });
-
+  console.log('userData>>>>>>>>>>>>>', userData);
+  console.log('daysKey>>>>>>>>>>>>>', daysKey);
   const sheetInfo: SheetDataType = {
     '序号': '',
     '日期\r\n姓名': '',
@@ -61,6 +67,8 @@ export const readExcel = (workbook: WorkBook, dateList: HolidayType[] = []) => {
   });
   sheetData.unshift(sheetInfo);
 
+  console.log('sheetData>>>>>>>>>>>>', sheetData);
+
   return {
     sheetData,
     sheetName: SheetNames[0],
@@ -75,7 +83,7 @@ export const readExcel = (workbook: WorkBook, dateList: HolidayType[] = []) => {
  */
 const workStatus = (value: string, ind: number, dateMapList: string[] = []) => {
 
-  if (!value.includes('补卡')) {
+  /* if (!value.includes('补卡')) {
     if (value.includes('缺卡(09:00)')) {
       if (value.includes('早退')) {
         return '上班未打卡；○';
@@ -146,13 +154,36 @@ const workStatus = (value: string, ind: number, dateMapList: string[] = []) => {
 
   if (value.includes('休息')) {
     return dateMapList[ind - 1];
-  }
+  } */
 
+  // 所有的休息
   if (value === '--') {
-    return '--';
+    return dateMapList[ind - 1] || '--';
   }
 
-  return '√';
+  const startTime = value.split(';')[0] || '';
+  const endTime = value.split(';')[1]?.trim() || '';
+
+  let checkRes = '';
+
+  if (startTime && endTime) {
+    const startHour = Number(startTime.split(':')[0]);
+    const startMin = Number(startTime.split(':')[1]);
+    // 迟到
+    if (startHour > CHECK_START_HOUR || (startHour === CHECK_START_HOUR && startMin > CHECK_START_MIN)) {
+      checkRes += '▲';
+    }
+    const endHour = Number(startTime.split(':')[1]);
+    const endMin = Number(startTime.split(':')[1]);
+    // 早退
+    if (endHour < CHECK_END_HOUR || (endHour === CHECK_END_HOUR && endMin < CHECK_END_MIN)) {
+      checkRes += ((checkRes ? '；' : '') + '○');
+    }
+  } else {
+    return value;
+  }
+
+  return checkRes || '√';
 }
 
 /* 
