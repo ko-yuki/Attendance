@@ -173,8 +173,8 @@ const workStatus = (value: string, ind: number, dateMapList: string[] = []) => {
     if (startHour > CHECK_START_HOUR || (startHour === CHECK_START_HOUR && startMin > CHECK_START_MIN)) {
       checkRes += '▲';
     }
-    const endHour = Number(startTime.split(':')[1]);
-    const endMin = Number(startTime.split(':')[1]);
+    const endHour = Number(endTime.split(':')[0]);
+    const endMin = Number(endTime.split(':')[1]);
     // 早退
     if (endHour < CHECK_END_HOUR || (endHour === CHECK_END_HOUR && endMin < CHECK_END_MIN)) {
       checkRes += ((checkRes ? '；' : '') + '○');
